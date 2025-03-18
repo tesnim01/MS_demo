@@ -27,6 +27,16 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
+        <!-- SonarQube Configuration -->
+        <sonar.projectKey>demo3</sonar.projectKey>
+        <sonar.projectName>demo3</sonar.projectName>
+        <sonar.projectVersion>1.0</sonar.projectVersion>
+        <sonar.host.url>http://localhost:9000</sonar.host.url>
+        <sonar.sources>src/main/java</sonar.sources>
+        <sonar.tests>src/test/java</sonar.tests>
+        <sonar.sourceEncoding>UTF-8</sonar.sourceEncoding>
+        <sonar.login>sqp_6e32512bab329174b1a6c601146bec01b21aea5c</sonar.login>
+
     </properties>
 
     <dependencyManagement>
@@ -44,6 +54,14 @@
                 <version>${spring-cloud.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
+            </dependency>
+
+            <!-- JUnit 5 Dependency -->
+            <dependency>
+                <groupId>org.junit.jupiter</groupId>
+                <artifactId>junit-jupiter</artifactId>
+                <version>5.9.3</version>
+                <scope>test</scope>
             </dependency>
         </dependencies>
     </dependencyManagement>

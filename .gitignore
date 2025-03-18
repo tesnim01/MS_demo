@@ -1,0 +1,21 @@
+# IntelliJ IDEA
+.idea/
+*.iws
+*.iml
+*.ipr
+out/
+
+# Maven
+target/
+*.jar
+*.war
+*.ear
+
+# Logs
+logs/
+*.log
+
+# Docker
+.dockerignore
+docker-compose.override.yml
+.env

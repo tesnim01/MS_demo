@@ -1,0 +1,60 @@
+version: '3.8'
+
+services:
+  eureka-server:
+    build: ./eureka-server
+    container_name: eureka-server
+    ports:
+      - "8761:8761"
+    environment:
+      - SPRING_APPLICATION_NAME=eureka-server
+    networks:
+      - spring-cloud-network
+
+  microservice1:
+    build: ./Microservice1
+    container_name: microservice1
+    ports:
+      - "8081:8081"
+    environment:
+      - SPRING_APPLICATION_NAME=MICROSERVICE1
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+      - SERVER_PORT=8081
+    depends_on:
+      - eureka-server
+    networks:
+      - spring-cloud-network
+
+  microservice2:
+    build: ./Microservice2
+    container_name: microservice2
+    ports:
+      - "8082:8082"
+    environment:
+      - SPRING_APPLICATION_NAME=MICROSERVICE2
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+      - SERVER_PORT=8082
+    depends_on:
+      - eureka-server
+    networks:
+      - spring-cloud-network
+
+  gateway:
+    build: ./Gateway
+    container_name: gateway
+    ports:
+      - "8083:8083"
+    environment:
+      - SPRING_APPLICATION_NAME=gateway
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+      - SERVER_PORT=8083
+    depends_on:
+      - eureka-server
+      - microservice1
+      - microservice2
+    networks:
+      - spring-cloud-network
+
+networks:
+  spring-cloud-network:
+    driver: bridge

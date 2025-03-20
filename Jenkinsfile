@@ -4,6 +4,7 @@ pipeline {
     environment {
         DOCKERHUB_CREDENTIALS = credentials('dockerhub-credentials')
         SONAR_TOKEN = credentials('sonar-token')
+        DOCKER_REPO = 'mimo009/ms_demo_cicd'
     }
     
     stages {
@@ -39,10 +40,10 @@ pipeline {
         stage('Build Docker Images') {
             steps {
                 sh '''
-                    docker build -t your-dockerhub-username/eureka-server:latest ./eureka-server
-                    docker build -t your-dockerhub-username/microservice1:latest ./Microservice1
-                    docker build -t your-dockerhub-username/microservice2:latest ./Microservice2
-                    docker build -t your-dockerhub-username/gateway:latest ./Gateway
+                    docker build -t ${DOCKER_REPO}/eureka-server ./eureka-server
+                    docker build -t ${DOCKER_REPO}/microservice1 ./Microservice1
+                    docker build -t ${DOCKER_REPO}/microservice2 ./Microservice2
+                    docker build -t ${DOCKER_REPO}/gateway ./Gateway
                 '''
             }
         }
@@ -51,10 +52,10 @@ pipeline {
             steps {
                 sh '''
                     echo $DOCKERHUB_CREDENTIALS_PSW | docker login -u $DOCKERHUB_CREDENTIALS_USR --password-stdin
-                    docker push your-dockerhub-username/eureka-server:latest
-                    docker push your-dockerhub-username/microservice1:latest
-                    docker push your-dockerhub-username/microservice2:latest
-                    docker push your-dockerhub-username/gateway:latest
+                    docker push ${DOCKER_REPO}/eureka-server
+                    docker push ${DOCKER_REPO}/microservice1
+                    docker push ${DOCKER_REPO}/microservice2
+                    docker push ${DOCKER_REPO}/gateway
                 '''
             }
         }

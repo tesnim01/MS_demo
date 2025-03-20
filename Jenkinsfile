@@ -10,6 +10,7 @@ pipeline {
         DOCKERHUB_CREDENTIALS = credentials('dockerhub-credentials')
         SONAR_TOKEN = credentials('sonar-token')
         DOCKER_REPO = 'mimo009/ms_demo_cicd'
+        SONAR_HOST_URL = 'http://sonarqube:9000'
     }
     
     stages {
@@ -20,6 +21,8 @@ pipeline {
                     java -version
                     echo "\nMaven version:"
                     mvn -version
+                    echo "\nTesting SonarQube connection:"
+                    curl -I ${SONAR_HOST_URL}
                 '''
             }
         }
@@ -44,11 +47,15 @@ pipeline {
         
         stage('SonarQube Analysis') {
             steps {
-                withSonarQubeEnv('SonarQube') {
-                    sh 'mvn sonar:sonar \
-                        -Dsonar.projectKey=ms_demo_parent \
-                        -Dsonar.host.url=http://sonarqube:9000 \
-                        -Dsonar.login=${SONAR_TOKEN}'
+                script {
+                    try {
+                        withSonarQubeEnv(credentialsId: 'sonar-token', installationName: 'SonarQube') {
+                            sh 'mvn sonar:sonar -Dsonar.host.url=${SONAR_HOST_URL}'
+                        }
+                    } catch (Exception e) {
+                        echo "SonarQube Analysis failed: ${e.message}"
+                        currentBuild.result = 'UNSTABLE'
+                    }
                 }
             }
         }

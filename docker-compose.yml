@@ -2,7 +2,10 @@ version: '3.8'
 
 services:
   eureka-server:
-    build: ./eureka-server
+    build: 
+      context: ./eureka-server
+      dockerfile: Dockerfile
+    image: mimo009/ms_demo_dockerhub:eureka-server
     container_name: eureka-server
     ports:
       - "8761:8761"
@@ -12,7 +15,10 @@ services:
       - spring-cloud-network
 
   microservice1:
-    build: ./Microservice1
+    build: 
+      context: ./Microservice1
+      dockerfile: Dockerfile
+    image: mimo009/ms_demo_dockerhub:microservice1
     container_name: microservice1
     ports:
       - "8081:8081"
@@ -26,7 +32,10 @@ services:
       - spring-cloud-network
 
   microservice2:
-    build: ./Microservice2
+    build: 
+      context: ./Microservice2
+      dockerfile: Dockerfile
+    image: mimo009/ms_demo_dockerhub:microservice2
     container_name: microservice2
     ports:
       - "8082:8082"
@@ -40,7 +49,10 @@ services:
       - spring-cloud-network
 
   gateway:
-    build: ./Gateway
+    build: 
+      context: ./Gateway
+      dockerfile: Dockerfile
+    image: mimo009/ms_demo_dockerhub:gateway
     container_name: gateway
     ports:
       - "8083:8083"

@@ -1,0 +1,16 @@
+.git
+.gitignore
+target/
+!target/*.jar
+README.md
+*.md
+.env
+.idea/
+.vscode/
+*.log
+.DS_Store
+*.class
+*.iml
+.settings/
+.project
+.classpath 

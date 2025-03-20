@@ -13,7 +13,11 @@
 
     <artifactId>Gateway</artifactId>
     <name>Gateway</name>
-    <description>API Gateway for the microservices demo project</description>
+    <description>API Gateway for the microservices</description>
+
+    <properties>
+        <sonar.projectKey>ms_demo_gateway</sonar.projectKey>
+    </properties>
 
     <dependencies>
         <dependency>
@@ -23,6 +27,10 @@
         <dependency>
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-starter-gateway</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
         </dependency>
 
         <dependency>

@@ -13,29 +13,31 @@
     <description>Parent POM for all microservices</description>
 
     <modules>
+        <module>eureka-server</module>
+        <module>Gateway</module>
         <module>Microservice1</module>
         <module>Microservice2</module>
-        <module>Gateway</module>
-        <module>eureka-server</module>
         <!-- Add other microservices as needed -->
     </modules>
 
     <properties>
         <java.version>17</java.version>
-        <spring-boot.version>3.0.6</spring-boot.version>
-        <spring-cloud.version>2022.0.2</spring-cloud.version>
+        <spring-boot.version>3.2.3</spring-boot.version>
+        <spring-cloud.version>2023.0.0</spring-cloud.version>
+        <maven-compiler-plugin.version>3.11.0</maven-compiler-plugin.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
         <!-- SonarQube Configuration -->
-        <sonar.projectKey>demo3</sonar.projectKey>
+        <sonar.projectKey>ms_demo_parent</sonar.projectKey>
         <sonar.projectName>demo3</sonar.projectName>
         <sonar.projectVersion>1.0</sonar.projectVersion>
         <sonar.host.url>http://localhost:9000</sonar.host.url>
         <sonar.sources>src/main/java</sonar.sources>
         <sonar.tests>src/test/java</sonar.tests>
         <sonar.sourceEncoding>UTF-8</sonar.sourceEncoding>
-        <sonar.login>sqp_6e32512bab329174b1a6c601146bec01b21aea5c</sonar.login>
+        <sonar.token>sqa_677b5aab7738178d34940683573d8f758fe634a9</sonar.token>
+        <sonar.moduleKey>${project.artifactId}</sonar.moduleKey>
 
     </properties>
 

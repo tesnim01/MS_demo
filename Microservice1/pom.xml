@@ -15,6 +15,10 @@
     <name>Microservice1</name>
     <description>First microservice in the demo project</description>
 
+    <properties>
+        <sonar.projectKey>ms_demo_microservice1</sonar.projectKey>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>org.springframework.boot</groupId>

@@ -15,6 +15,10 @@
     <name>Microservice2</name>
     <description>Second microservice in the demo project</description>
 
+    <properties>
+        <sonar.projectKey>ms_demo_microservice2</sonar.projectKey>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>org.springframework.boot</groupId>

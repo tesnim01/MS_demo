@@ -14,6 +14,10 @@
 	<name>eureka-server</name>
 	<description>Eureka Server for service discovery in the microservices demo project</description>
 
+	<properties>
+		<sonar.projectKey>ms_demo_eureka</sonar.projectKey>
+	</properties>
+
 	<dependencies>
 		<!-- Eureka Server Dependency -->
 		<dependency>

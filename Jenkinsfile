@@ -10,7 +10,6 @@ pipeline {
         GITHUB_CREDENTIALS = credentials('github-credentials')
         SONAR_TOKEN = credentials('sonar-token')
         DOCKER_REPO = 'mimo009/ms_demo_cicd'
-        SONAR_HOST_URL = 'http://host.docker.internal:9000'
     }
     
     tools {
@@ -77,11 +76,16 @@ pipeline {
         
         stage('SonarQube Analysis') {
             steps {
-                withSonarQubeEnv('SonarQube') {
+                script {
                     sh '''
+                        # Add host.docker.internal to /etc/hosts if not present
+                        if ! grep -q "host.docker.internal" /etc/hosts; then
+                            echo "$(ip route | grep default | awk '{print $3}') host.docker.internal" | sudo tee -a /etc/hosts
+                        fi
+                        
                         mvn sonar:sonar \
                         -Dsonar.projectKey=ms_demo \
-                        -Dsonar.host.url=${SONAR_HOST_URL} \
+                        -Dsonar.host.url=http://host.docker.internal:9000 \
                         -Dsonar.login=${SONAR_TOKEN}
                     '''
                 }

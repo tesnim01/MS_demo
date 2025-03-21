@@ -10,7 +10,7 @@ pipeline {
         GITHUB_CREDENTIALS = credentials('github-credentials')
         SONAR_TOKEN = credentials('sonar-token')
         DOCKER_REPO = 'mimo009/ms_demo_cicd'
-        SONAR_HOST_URL = 'http://sonarqube:9000'
+        SONAR_HOST_URL = 'http://host.docker.internal:9000'
     }
     
     tools {
@@ -78,10 +78,12 @@ pipeline {
         stage('SonarQube Analysis') {
             steps {
                 withSonarQubeEnv('SonarQube') {
-                    sh 'mvn sonar:sonar \
+                    sh '''
+                        mvn sonar:sonar \
                         -Dsonar.projectKey=ms_demo \
-                        -Dsonar.host.url=http://sonarqube:9000 \
-                        -Dsonar.login=${SONAR_TOKEN}'
+                        -Dsonar.host.url=${SONAR_HOST_URL} \
+                        -Dsonar.login=${SONAR_TOKEN}
+                    '''
                 }
             }
         }

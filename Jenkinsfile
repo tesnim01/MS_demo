@@ -15,6 +15,7 @@ pipeline {
         SONAR_TOKEN = credentials('sonar-token')
         DOCKER_REPO = 'mimo009/ms_demo_cicd'
         SONAR_HOST_URL = 'http://sonarqube:9000'
+        GITHUB_CREDENTIALS = credentials('github-credentials')
     }
     
     stages {
@@ -36,6 +37,24 @@ pipeline {
         stage('Checkout') {
             steps {
                 checkout scm
+            }
+        }
+        
+        stage('Push to GitHub') {
+            steps {
+                script {
+                    try {
+                        sh '''
+                            git config --global user.email "jenkins@example.com"
+                            git config --global user.name "Jenkins"
+                            git add .
+                            git commit -m "Update docker-compose and Jenkins pipeline configuration"
+                            git push https://${GITHUB_CREDENTIALS_USR}:${GITHUB_CREDENTIALS_PSW}@github.com/${GITHUB_CREDENTIALS_USR}/MS_demo.git HEAD:main
+                        '''
+                    } catch (Exception e) {
+                        echo "No changes to commit or push failed: ${e.message}"
+                    }
+                }
             }
         }
         
@@ -91,22 +110,48 @@ pipeline {
         
         stage('Deploy with Docker Compose') {
             steps {
-                sh '''
-                    # Stop and remove existing containers
-                    docker-compose down || true
-                    
-                    # Pull latest images
-                    docker-compose pull
-                    
-                    # Start services
-                    docker-compose up -d
-                    
-                    # Wait for services to be healthy
-                    sleep 30
-                    
-                    # Check service status
-                    docker-compose ps
-                '''
+                script {
+                    try {
+                        // Export the Docker repository for docker-compose to use
+                        sh "export DOCKER_REPO=${DOCKER_REPO}"
+                        
+                        // Stop existing containers
+                        sh 'docker-compose down --remove-orphans || true'
+                        
+                        // Pull latest images
+                        sh 'docker-compose pull'
+                        
+                        // Start services in detached mode
+                        sh 'docker-compose up -d'
+                        
+                        // Wait for services to be healthy
+                        sh '''
+                            echo "Waiting for services to be healthy..."
+                            attempt=1
+                            max_attempts=10
+                            
+                            until docker-compose ps | grep -q "healthy" || [ $attempt -gt $max_attempts ]
+                            do
+                                echo "Attempt $attempt of $max_attempts..."
+                                sleep 30
+                                attempt=$((attempt + 1))
+                            done
+                            
+                            if [ $attempt -gt $max_attempts ]; then
+                                echo "Services failed to become healthy"
+                                docker-compose logs
+                                exit 1
+                            fi
+                            
+                            echo "All services are healthy!"
+                            docker-compose ps
+                        '''
+                    } catch (Exception e) {
+                        echo "Deployment failed: ${e.message}"
+                        sh 'docker-compose logs'
+                        throw e
+                    }
+                }
             }
         }
     }

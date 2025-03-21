@@ -2,71 +2,60 @@ version: '3.8'
 
 services:
   eureka-server:
-    build: 
-      context: ./eureka-server
-      dockerfile: Dockerfile
-    image: mimo009/ms_demo_dockerhub:eureka-server
-    container_name: eureka-server
+    image: ${DOCKER_REPO:-mimo009/ms_demo_cicd}:eureka-server
     ports:
       - "8761:8761"
-    environment:
-      - SPRING_APPLICATION_NAME=eureka-server
-    networks:
-      - spring-cloud-network
-
-  microservice1:
-    build: 
-      context: ./Microservice1
-      dockerfile: Dockerfile
-    image: mimo009/ms_demo_dockerhub:microservice1
-    container_name: microservice1
-    ports:
-      - "8081:8081"
-    environment:
-      - SPRING_APPLICATION_NAME=MICROSERVICE1
-      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
-      - SERVER_PORT=8081
-    depends_on:
-      - eureka-server
-    networks:
-      - spring-cloud-network
-
-  microservice2:
-    build: 
-      context: ./Microservice2
-      dockerfile: Dockerfile
-    image: mimo009/ms_demo_dockerhub:microservice2
-    container_name: microservice2
-    ports:
-      - "8082:8082"
-    environment:
-      - SPRING_APPLICATION_NAME=MICROSERVICE2
-      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
-      - SERVER_PORT=8082
-    depends_on:
-      - eureka-server
-    networks:
-      - spring-cloud-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8761"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   gateway:
-    build: 
-      context: ./Gateway
-      dockerfile: Dockerfile
-    image: mimo009/ms_demo_dockerhub:gateway
-    container_name: gateway
+    image: ${DOCKER_REPO:-mimo009/ms_demo_cicd}:gateway
     ports:
       - "8083:8083"
     environment:
-      - SPRING_APPLICATION_NAME=gateway
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
-      - SERVER_PORT=8083
     depends_on:
-      - eureka-server
-      - microservice1
-      - microservice2
-    networks:
-      - spring-cloud-network
+      eureka-server:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8083/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  microservice1:
+    image: ${DOCKER_REPO:-mimo009/ms_demo_cicd}:microservice1
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+      gateway:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  microservice2:
+    image: ${DOCKER_REPO:-mimo009/ms_demo_cicd}:microservice2
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+      gateway:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8082/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
 networks:
-  spring-cloud-network:
-    driver: bridge
+  default:
+    name: ms_demo_network

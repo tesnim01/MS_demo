@@ -9,7 +9,8 @@ pipeline {
     environment {
         DOCKERHUB_CREDENTIALS = credentials('dockerhub-credentials')
         SONAR_TOKEN = credentials('sonar-token')
-        DOCKER_REPO = 'mimo009/ms_demo_cicd'
+        DOCKER_REPO = 'mimo009'
+        PROJECT_NAME = 'ms_demo_cicd'
         SONAR_HOST_URL = 'http://sonarqube:9000'
     }
     
@@ -63,10 +64,10 @@ pipeline {
         stage('Build Docker Images') {
             steps {
                 sh '''
-                    docker build -t ${DOCKER_REPO}/eureka-server:latest eureka-server/
-                    docker build -t ${DOCKER_REPO}/microservice1:latest Microservice1/
-                    docker build -t ${DOCKER_REPO}/microservice2:latest Microservice2/
-                    docker build -t ${DOCKER_REPO}/gateway:latest Gateway/
+                    docker build -t ${DOCKER_REPO}/${PROJECT_NAME}-eureka:latest eureka-server/
+                    docker build -t ${DOCKER_REPO}/${PROJECT_NAME}-microservice1:latest Microservice1/
+                    docker build -t ${DOCKER_REPO}/${PROJECT_NAME}-microservice2:latest Microservice2/
+                    docker build -t ${DOCKER_REPO}/${PROJECT_NAME}-gateway:latest Gateway/
                 '''
             }
         }
@@ -75,10 +76,10 @@ pipeline {
             steps {
                 sh '''
                     echo $DOCKERHUB_CREDENTIALS_PSW | docker login -u $DOCKERHUB_CREDENTIALS_USR --password-stdin
-                    docker push ${DOCKER_REPO}/eureka-server:latest
-                    docker push ${DOCKER_REPO}/microservice1:latest
-                    docker push ${DOCKER_REPO}/microservice2:latest
-                    docker push ${DOCKER_REPO}/gateway:latest
+                    docker push ${DOCKER_REPO}/${PROJECT_NAME}-eureka:latest
+                    docker push ${DOCKER_REPO}/${PROJECT_NAME}-microservice1:latest
+                    docker push ${DOCKER_REPO}/${PROJECT_NAME}-microservice2:latest
+                    docker push ${DOCKER_REPO}/${PROJECT_NAME}-gateway:latest
                 '''
             }
         }

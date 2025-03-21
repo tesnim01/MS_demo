@@ -63,10 +63,10 @@ pipeline {
         stage('Build Docker Images') {
             steps {
                 sh '''
-                    docker build -t ${DOCKER_REPO}/eureka-server:latest ./eureka-server
-                    docker build -t ${DOCKER_REPO}/microservice1:latest ./Microservice1
-                    docker build -t ${DOCKER_REPO}/microservice2:latest ./Microservice2
-                    docker build -t ${DOCKER_REPO}/gateway:latest ./Gateway
+                    docker build -t ${DOCKER_REPO}/eureka-server ./eureka-server
+                    docker build -t ${DOCKER_REPO}/microservice1 ./Microservice1
+                    docker build -t ${DOCKER_REPO}/microservice2./Microservice2
+                    docker build -t ${DOCKER_REPO}/gateway./Gateway
                 '''
             }
         }
@@ -75,10 +75,10 @@ pipeline {
             steps {
                 sh '''
                     echo $DOCKERHUB_CREDENTIALS_PSW | docker login -u $DOCKERHUB_CREDENTIALS_USR --password-stdin
-                    docker push ${DOCKER_REPO}/eureka-server:latest
-                    docker push ${DOCKER_REPO}/microservice1:latest
-                    docker push ${DOCKER_REPO}/microservice2:latest
-                    docker push ${DOCKER_REPO}/gateway:latest
+                    docker push ${DOCKER_REPO}/eureka-server
+                    docker push ${DOCKER_REPO}/microservice1
+                    docker push ${DOCKER_REPO}/microservice2
+                    docker push ${DOCKER_REPO}/gateway
                 '''
             }
         }

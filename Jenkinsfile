@@ -65,8 +65,8 @@ pipeline {
                 sh '''
                     docker build -t ${DOCKER_REPO}/eureka-server ./eureka-server
                     docker build -t ${DOCKER_REPO}/microservice1 ./Microservice1
-                    docker build -t ${DOCKER_REPO}/microservice2./Microservice2
-                    docker build -t ${DOCKER_REPO}/gateway./Gateway
+                    docker build -t ${DOCKER_REPO}/microservice2 ./Microservice2
+                    docker build -t ${DOCKER_REPO}/gateway ./Gateway
                 '''
             }
         }

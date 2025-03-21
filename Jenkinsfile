@@ -141,14 +141,30 @@ pipeline {
                                 while [ $attempt -le $max_attempts ]; do
                                     echo "Checking $service health (Attempt $attempt/$max_attempts)..."
                                     
+                                    # Show container status
+                                    echo "Container status:"
+                                    docker-compose ps $service
+                                    
+                                    # Show container logs
+                                    echo "Container logs:"
+                                    docker-compose logs --tail=50 $service
+                                    
+                                    # Check if container is running
+                                    if ! docker-compose ps $service | grep -q "Up"; then
+                                        echo "$service is not running!"
+                                        docker-compose logs $service
+                                        return 1
+                                    fi
+                                    
+                                    # Check health status
                                     if docker-compose ps $service | grep -q "healthy"; then
                                         echo "$service is healthy!"
                                         return 0
                                     fi
                                     
-                                    # If unhealthy, show logs
+                                    # If unhealthy, show detailed logs
                                     if docker-compose ps $service | grep -q "unhealthy"; then
-                                        echo "$service is unhealthy. Logs:"
+                                        echo "$service is unhealthy. Full logs:"
                                         docker-compose logs $service
                                     fi
                                     
@@ -166,6 +182,9 @@ pipeline {
                             for service in "${services[@]}"; do
                                 if ! check_health "$service"; then
                                     echo "Service $service failed health check"
+                                    echo "All container statuses:"
+                                    docker-compose ps
+                                    echo "All container logs:"
                                     docker-compose logs
                                     exit 1
                                 fi
@@ -176,7 +195,12 @@ pipeline {
                         '''
                     } catch (Exception e) {
                         echo "Deployment failed: ${e.message}"
-                        sh 'docker-compose logs'
+                        sh '''
+                            echo "Container statuses:"
+                            docker-compose ps
+                            echo "Container logs:"
+                            docker-compose logs
+                        '''
                         throw e
                     }
                 }

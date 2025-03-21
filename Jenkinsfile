@@ -1,5 +1,9 @@
 pipeline {
-    agent any
+    agent {
+        node {
+            label 'remote-builder'
+        }
+    }
     
     tools {
         maven 'Maven 3.9.6'
@@ -21,8 +25,10 @@ pipeline {
                     java -version
                     echo "\nMaven version:"
                     mvn -version
-                    echo "\nTesting SonarQube connection:"
-                    curl -I ${SONAR_HOST_URL}
+                    echo "\nDocker version:"
+                    docker --version
+                    echo "\nWorking directory:"
+                    pwd
                 '''
             }
         }
@@ -79,6 +85,27 @@ pipeline {
                     docker push ${DOCKER_REPO}:microservice1
                     docker push ${DOCKER_REPO}:microservice2
                     docker push ${DOCKER_REPO}:gateway
+                '''
+            }
+        }
+        
+        stage('Deploy with Docker Compose') {
+            steps {
+                sh '''
+                    # Stop and remove existing containers
+                    docker-compose down || true
+                    
+                    # Pull latest images
+                    docker-compose pull
+                    
+                    # Start services
+                    docker-compose up -d
+                    
+                    # Wait for services to be healthy
+                    sleep 30
+                    
+                    # Check service status
+                    docker-compose ps
                 '''
             }
         }

@@ -117,22 +117,69 @@ pipeline {
         
         stage('Deploy with Docker Compose') {
             steps {
-                sh '''
-                    # Stop and remove existing containers
-                    docker-compose down || true
-                    
-                    # Pull latest images
-                    docker-compose pull
-                    
-                    # Start services
-                    docker-compose up -d
-                    
-                    # Wait for services to be healthy
-                    sleep 30
-                    
-                    # Check service status
-                    docker-compose ps
-                '''
+                script {
+                    try {
+                        sh '''
+                            # Stop existing containers
+                            docker-compose down --remove-orphans || true
+                            
+                            # Pull latest images
+                            docker-compose pull
+                            
+                            # Start services
+                            docker-compose up -d
+                            
+                            # Wait for services to be healthy
+                            echo "Waiting for services to be healthy..."
+                            
+                            # Function to check service health
+                            check_health() {
+                                local service=$1
+                                local max_attempts=30
+                                local attempt=1
+                                
+                                while [ $attempt -le $max_attempts ]; do
+                                    echo "Checking $service health (Attempt $attempt/$max_attempts)..."
+                                    
+                                    if docker-compose ps $service | grep -q "healthy"; then
+                                        echo "$service is healthy!"
+                                        return 0
+                                    fi
+                                    
+                                    # If unhealthy, show logs
+                                    if docker-compose ps $service | grep -q "unhealthy"; then
+                                        echo "$service is unhealthy. Logs:"
+                                        docker-compose logs $service
+                                    fi
+                                    
+                                    sleep 10
+                                    attempt=$((attempt + 1))
+                                done
+                                
+                                echo "$service failed to become healthy"
+                                return 1
+                            }
+                            
+                            # Check each service in order
+                            services=("eureka-server" "gateway" "microservice1" "microservice2")
+                            
+                            for service in "${services[@]}"; do
+                                if ! check_health "$service"; then
+                                    echo "Service $service failed health check"
+                                    docker-compose logs
+                                    exit 1
+                                fi
+                            done
+                            
+                            echo "All services are healthy!"
+                            docker-compose ps
+                        '''
+                    } catch (Exception e) {
+                        echo "Deployment failed: ${e.message}"
+                        sh 'docker-compose logs'
+                        throw e
+                    }
+                }
             }
         }
     }

@@ -6,10 +6,9 @@ pipeline {
     }
     
     environment {
-        DOCKERHUB_CREDENTIALS = credentials('dockerhub-credentials')
-        GITHUB_CREDENTIALS = credentials('github-credentials')
-        SONAR_TOKEN = credentials('sonar-token')
         DOCKER_REPO = 'mimo009/ms_demo_cicd'
+        SONAR_TOKEN = credentials('sonar-token')
+        DOCKERHUB_CREDENTIALS = credentials('dockerhub-credentials')
     }
     
     tools {
@@ -23,70 +22,65 @@ pipeline {
                 sh '''
                     echo "Java version:"
                     java -version
-                    echo "\nMaven version:"
+                    echo "Maven version:"
                     mvn -version
-                    echo "\nDocker version:"
+                    echo "Docker version:"
                     docker --version
-                    echo "\nWorking directory:"
-                    pwd
+                    echo "Docker Compose version:"
+                    docker-compose --version
                 '''
             }
         }
-
+        
         stage('Checkout') {
             steps {
                 checkout scm
+                sh '''
+                    echo "Current directory:"
+                    pwd
+                    echo "Directory contents:"
+                    ls -la
+                '''
             }
         }
         
-        stage('Push to GitHub') {
+        stage('Build and Test') {
             steps {
-                script {
-                    try {
-                        withCredentials([usernamePassword(credentialsId: 'github-credentials', usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD')]) {
-                            sh '''
-                                # Configure Git for pipeline commits
-                                git config --global user.email "tesnimelbehi@gmail.com"
-                                git config --global user.name "tesnim01"
-                                git add .
-                                git commit -m "[Pipeline] Update configuration - $(date)" || true
-                                git remote set-url origin https://${GIT_USERNAME}:${GIT_PASSWORD}@github.com/${GIT_USERNAME}/MS_demo.git
-                                git push origin HEAD:main
-                            '''
-                        }
-                    } catch (Exception e) {
-                        echo "Git push failed: ${e.message}"
-                        currentBuild.result = 'UNSTABLE'
-                    }
-                }
-            }
-        }
-        
-        stage('Build') {
-            steps {
-                sh 'mvn clean package -DskipTests'
-            }
-        }
-        
-        stage('Test') {
-            steps {
-                sh 'mvn test'
+                sh '''
+                    echo "Building eureka-server..."
+                    cd eureka-server
+                    mvn clean package -DskipTests
+                    cd ..
+                    
+                    echo "Building gateway..."
+                    cd Gateway
+                    mvn clean package -DskipTests
+                    cd ..
+                    
+                    echo "Building microservice1..."
+                    cd Microservice1
+                    mvn clean package -DskipTests
+                    cd ..
+                    
+                    echo "Building microservice2..."
+                    cd Microservice2
+                    mvn clean package -DskipTests
+                    cd ..
+                '''
             }
         }
         
         stage('SonarQube Analysis') {
             steps {
-                script {
+                withSonarQubeEnv('SonarQube') {
                     sh '''
-                        # Add host.docker.internal to /etc/hosts if not present
-                        if ! grep -q "host.docker.internal" /etc/hosts; then
-                            echo "$(ip route | grep default | awk '{print $3}') host.docker.internal" | sudo tee -a /etc/hosts
-                        fi
-                        
-                        mvn sonar:sonar \
-                        -Dsonar.projectKey=ms_demo \
-                        -Dsonar.host.url=http://host.docker.internal:9000 \
-                        -Dsonar.login=${SONAR_TOKEN}
+                        echo "Running SonarQube analysis..."
+                        mvn clean verify sonar:sonar \
+                            -Dsonar.projectKey=ms_demo \
+                            -Dsonar.host.url=http://host.docker.internal:9000 \
+                            -Dsonar.login=${SONAR_TOKEN} \
+                            -Dsonar.java.source=17 \
+                            -Dsonar.java.target=17
                     '''
                 }
             }
@@ -94,24 +88,38 @@ pipeline {
         
         stage('Build Docker Images') {
             steps {
-                sh '''
-                    docker build -t ${DOCKER_REPO}:eureka-server eureka-server/
-                    docker build -t ${DOCKER_REPO}:gateway Gateway/
-                    docker build -t ${DOCKER_REPO}:microservice1 Microservice1/
-                    docker build -t ${DOCKER_REPO}:microservice2 Microservice2/
-                '''
+                withCredentials([usernamePassword(credentialsId: 'dockerhub-credentials', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
+                    sh '''
+                        echo "Logging into DockerHub..."
+                        echo ${DOCKER_PASSWORD} | docker login -u ${DOCKER_USERNAME} --password-stdin
+                        
+                        echo "Building eureka-server image..."
+                        docker build -t ${DOCKER_REPO}:eureka-server eureka-server/
+                        
+                        echo "Building gateway image..."
+                        docker build -t ${DOCKER_REPO}:gateway Gateway/
+                        
+                        echo "Building microservice1 image..."
+                        docker build -t ${DOCKER_REPO}:microservice1 Microservice1/
+                        
+                        echo "Building microservice2 image..."
+                        docker build -t ${DOCKER_REPO}:microservice2 Microservice2/
+                    '''
+                }
             }
         }
         
         stage('Push to DockerHub') {
             steps {
-                sh '''
-                    docker login -u ${DOCKERHUB_CREDENTIALS_USR} -p ${DOCKERHUB_CREDENTIALS_PSW}
-                    docker push ${DOCKER_REPO}:eureka-server
-                    docker push ${DOCKER_REPO}:gateway
-                    docker push ${DOCKER_REPO}:microservice1
-                    docker push ${DOCKER_REPO}:microservice2
-                '''
+                withCredentials([usernamePassword(credentialsId: 'dockerhub-credentials', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
+                    sh '''
+                        echo "Pushing images to DockerHub..."
+                        docker push ${DOCKER_REPO}:eureka-server
+                        docker push ${DOCKER_REPO}:gateway
+                        docker push ${DOCKER_REPO}:microservice1
+                        docker push ${DOCKER_REPO}:microservice2
+                    '''
+                }
             }
         }
         
@@ -120,6 +128,11 @@ pipeline {
                 script {
                     try {
                         sh '''
+                            echo "Current directory:"
+                            pwd
+                            echo "Directory contents:"
+                            ls -la
+                            
                             # Stop existing containers
                             docker-compose down --remove-orphans || true
                             
@@ -211,9 +224,7 @@ pipeline {
     post {
         always {
             cleanWs()
-        }
-        failure {
-            echo 'Pipeline failed!'
+            echo "Pipeline failed!"
         }
     }
 } 

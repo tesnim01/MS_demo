@@ -190,18 +190,10 @@ pipeline {
                             }
                             
                             # Check each service in order
-                            services=("eureka-server" "gateway" "microservice1" "microservice2")
-                            
-                            for service in "${services[@]}"; do
-                                if ! check_health "$service"; then
-                                    echo "Service $service failed health check"
-                                    echo "All container statuses:"
-                                    docker-compose ps
-                                    echo "All container logs:"
-                                    docker-compose logs
-                                    exit 1
-                                fi
-                            done
+                            check_health "eureka-server" || exit 1
+                            check_health "gateway" || exit 1
+                            check_health "microservice1" || exit 1
+                            check_health "microservice2" || exit 1
                             
                             echo "All services are healthy!"
                             docker-compose ps

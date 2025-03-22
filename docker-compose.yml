@@ -29,6 +29,8 @@ services:
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
       - SPRING_APPLICATION_NAME=Gateway
       - SERVER_PORT=8083
+      - EUREKA_INSTANCE_PREFER_IP_ADDRESS=true
+      - EUREKA_INSTANCE_IP_ADDRESS=gateway
       - LOGGING_LEVEL_ROOT=INFO
       - LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_CLOUD=DEBUG
     healthcheck:
@@ -51,6 +53,9 @@ services:
       - SPRING_PROFILES_ACTIVE=default
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
       - SPRING_APPLICATION_NAME=Microservice1
+      - SERVER_PORT=8081
+      - EUREKA_INSTANCE_PREFER_IP_ADDRESS=true
+      - EUREKA_INSTANCE_IP_ADDRESS=microservice1
       - LOGGING_LEVEL_ROOT=INFO
       - LOGGING_LEVEL_COM_EXAMPLE=DEBUG
     healthcheck:
@@ -73,6 +78,9 @@ services:
       - SPRING_PROFILES_ACTIVE=default
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
       - SPRING_APPLICATION_NAME=Microservice2
+      - SERVER_PORT=8082
+      - EUREKA_INSTANCE_PREFER_IP_ADDRESS=true
+      - EUREKA_INSTANCE_IP_ADDRESS=microservice2
       - LOGGING_LEVEL_ROOT=INFO
       - LOGGING_LEVEL_COM_EXAMPLE=DEBUG
     healthcheck:

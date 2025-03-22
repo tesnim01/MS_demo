@@ -148,7 +148,7 @@ pipeline {
                             # Function to check service health
                             check_health() {
                                 local service=$1
-                                local max_attempts=30
+                                local max_attempts=60
                                 local attempt=1
                                 
                                 while [ $attempt -le $max_attempts ]; do
@@ -181,7 +181,7 @@ pipeline {
                                         docker-compose logs $service
                                     fi
                                     
-                                    sleep 10
+                                    sleep 15
                                     attempt=$((attempt + 1))
                                 done
                                 

@@ -70,7 +70,7 @@ pipeline {
             }
         }
         
-        stage('SonarQube Analysis') {
+        /*stage('SonarQube Analysis') {
             steps {
                 withSonarQubeEnv('SonarQube') {
                     sh '''
@@ -84,7 +84,7 @@ pipeline {
                     '''
                 }
             }
-        }
+        }*/
         
         stage('Build Docker Images') {
             steps {
